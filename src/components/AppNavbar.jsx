@@ -1,14 +1,16 @@
-import { Container, Navbar, Nav, NavDropdown, Button } from "react-bootstrap";
+// import { Container, Navbar, Nav, NavDropdown, Button } from "react-bootstrap";
 
 export default function AppNavbar () {
     return (
-        <Navbar expand="lg" bg="dark" variant="dark" className="shadow-sm mb-4">
-        <Container>
+        <div expand="lg" bg="dark" variant="dark" className="shadow-sm mb-4">
+            {/* <Container>
             <Navbar.Brand href="/login">Point Of Sales | PPKD JP</Navbar.Brand>
             <Navbar.Toggle aria-controls="basic-navbar-nav" />
             <Navbar.Collapse id="basic-navbar-nav">
             <Nav className="me-auto">
                 <Nav.Link href="/dashboard">Home</Nav.Link>
+                <Nav.Link href="/productpage">Product</Nav.Link>
+                <Nav.Link href="/category">Category</Nav.Link>
                 <Nav.Link href="#link">Link</Nav.Link>
                     <NavDropdown title="Dropdown" id="basic-nav-dropdown">
                     <NavDropdown.Item href="#action/3.1">Action</NavDropdown.Item>
@@ -29,7 +31,7 @@ export default function AppNavbar () {
                 </Button>
             </Nav>
             </Navbar.Collapse>
-        </Container>
-        </Navbar>
+        </Container> */}
+        </div>
     );
     }

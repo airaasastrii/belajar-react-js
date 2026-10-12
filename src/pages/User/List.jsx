@@ -1,44 +1,56 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import AppModal from "@/components/AppModal";
 import { Label } from "@/components/ui/label";
+import api from "@/services/api.js";
 
-const dataUsers = [
-    {
-        id: 1,
-        name: "Aira",
-        email: "airaasastrii@gmail.com",
-        password: 12345678
-    },
-    {
-        id: 2,
-        name: "Budi",
-        email: "budii23@gmail.com",
-        password: 12345678
-    },
-    {
-        id: 3,
-        name: "Ani",
-        email: "anii45@gmail.com",
-        password: 12345678
-    },
+// const dataUsers = [
+//     {
+//         id: 1,
+//         name: "Aira",
+//         email: "airaasastrii@gmail.com",
+//         password: 12345678
+//     },
+//     {
+//         id: 2,
+//         name: "Budi",
+//         email: "budii23@gmail.com",
+//         password: 12345678
+//     },
+//     {
+//         id: 3,
+//         name: "Ani",
+//         email: "anii45@gmail.com",
+//         password: 12345678
+//     },
 
-]
+// ]
 const ListUser = () => {
     const _initForm = {
         id: null,
         name: "",
         email: "",
         password: "",
-        status: 'Active'
+        is_active: 1,
     };
 
     const [showModal, setShowModal] = useState(false);
-    const [users, setUsers] = useState(dataUsers);
+    const [users, setUsers] = useState([]);
     const [formData, setFormData] = useState(_initForm);
     const [isEdit, setIsEdit] = useState(false);
+    const fetchUser = async () => {
+        try {
+            const response = await api.get("/user");
+            setUsers(response.data.data);
+        } catch (error) {
+            console.log(error.message);
+        }
+    };
+    useEffect(() => {
+        fetchUser()
+    }, []);
 
     const handleOpenModal = () => {
         setShowModal(true);
@@ -63,29 +75,46 @@ const ListUser = () => {
         });
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-
-        // jika mau edit data 
-        if (isEdit) {
-            setUsers(users.map((user) => (user.id === formData.id ? formData : user)));
-        } else {
-            const newUser = {
-                ...formData,
-                id: Date.now(),
+        try {
+            const payload = {
+                name: formData.name,
+                email: formData.email,
+                password: formData.password,
+                is_active: parseInt(formData.is_active),
             };
-
-            setUsers([...users, newUser]);
-            setFormData(_initForm);
-        }
-        setShowModal(false);
-
+            if (isEdit) {
+                // update data =
+                await api.put(`/user/${formData.id}`, payload);
+                // setUsers(users.map((user) => (user.id === formData.id ? formData : user)));
+            } else {
+                // update data
+                await api.post("/user", payload);
+                // const newUser = {
+                    //     ...formData,
+                    //     id: Date.now(),
+                    // };
+                    // setUsers([...users, newUser]);
+                } 
+                setFormData(_initForm);
+            } catch (error) {
+                const errMsg = error.message;
+                console.log(errMsg);
+            } finally {
+                fetchUser();
+                setShowModal(false);
+            }
+            // jika mau edit data 
     };
 
-    const handleDelete = (id) => {
+    const handleDelete = async (id) => {
         const confirmation = window.confirm("Are you sure want to delete this data?");
         if (confirmation) {
-            setUsers(users.filter((u) => u.id !== id));
+            // delete
+            await api.delete(`/user/${id}`);
+            fetchUser();
+            // setUsers(users.filter((u) => u.id !== id));
         }
     // filter : users
     };
@@ -97,7 +126,7 @@ const ListUser = () => {
                     <div>
                         <CardTitle className="text-xl font-bold">Data User</CardTitle>
                     </div>
-                    <Button className="bg-pink-700" onClick={handleOpenModal}>Create New User</Button>
+                    <Button className="bg-pink-800" onClick={handleOpenModal}>Create New User</Button>
                 </CardHeader>
                 <CardContent className="p-0">
                     <div className="d-flex justify-content-between align-items-center mb-3">
@@ -112,7 +141,7 @@ const ListUser = () => {
                                 <th className="px-6 py-3 font-medium">Name</th>
                                 <th className="px-6 py-3 font-medium">Email</th>
                                 <th className="px-6 py-3 font-medium">Status</th>
-                                <th className="px-6 py-3 font-medium">Action</th>
+                                <th className="text-right pr-14 px-3 py-3 font-medium">Action</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-border">
@@ -122,11 +151,14 @@ const ListUser = () => {
                                         <td className="px-4 py-6 whitespace-nowrap">{index + 1}</td>
                                         <td>{user.name}</td>
                                         <td>{user.email}</td>
-                                        <td>Active</td>
+                                        <td>
+                                            <span className= {`border p-2 rounded-lg px-6 ${user.is_active === 1? "bg-green-600" : "bg-red-600"}  text-white`}>{user.is_active === 1? "Active" : "In-Active"}
+                                            </span></td>
                                         <td className="px-4 py-6 text-right whitespace-nowrap">
-                                            <Button onClick={() => handleEditModal(user)} variant="warning" size="sm" className="me-2">Edit</Button>
-                                            <Button onClick={() => handleDelete(user.id)} variant="danger" size="sm" className="me-2">Delete</Button>
+                                            <Button onClick={() => handleEditModal(user)} size="sm" className="me-2 rounded-md bg-pink-800 text-white">Edit</Button>
+                                            <Button onClick={() => handleDelete(user.id)} variant="destructive" size="sm" className="me-2 rounded-md  bg-pink-500 text-white">Delete</Button>
                                         </td>
+
                                     </tr>
                                 ))
                             ) : (
@@ -164,26 +196,32 @@ const ListUser = () => {
 
 
                 {/* cara kedua */}
-                <div className="mb-3">
+                <div className="space-y-2">
                     <Label>Name</Label>
                     <Input type="text" name="name"
                         placeholder="Enter your name" required
                         value={formData.name} onChange={handleChange}></Input>
                 </div>
-                <div className="mb-3">
+                <div className="space-y-2">
                     <Label>Email</Label>
                     <Input type="email" name="email"
                         placeholder="Enter your email" required
                         value={formData.email} onChange={handleChange}></Input>
                 </div>
-                <div className="mb-3">
+                <div className="space-y-2">
                     <Label>Password</Label>
                     <Input type="password" name="password"
-                        placeholder="Enter your password" required
+                        placeholder="Enter your password" required={isEdit ? false : true}
                         value={formData.password} onChange={handleChange}></Input>
                 </div>
-
-                <div className="mb-3">
+                {isEdit ? (
+                    <div className="space-y-2">
+                        <Label>Activation</Label>
+                    </div>
+                ) : (
+                    ""
+                )}
+                <div className="space-y-2">
                     <label>Status</label>
                     <select name="status" value={formData.status} onChange={handleChange}>
                         <option value="">Select One</option>

@@ -11,6 +11,7 @@ import Login from "./pages/Login";
 import MainLayout from "./pages/MainLayout";
 import Dashboard from "./pages/Dashboard";
 import ListUser from "@/pages/User/List";
+import ListTransaction from "@/pages/transaction/List";
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
         <Route element={<MainLayout />}>
           <Route path="/dashboard" element={<Dashboard />}></Route>
           <Route path="/users" element={<ListUser />}></Route>
+          <Route path="/transaction" element={<ListTransaction />}></Route>
         </Route>
       </Routes>
     </BrowserRouter>

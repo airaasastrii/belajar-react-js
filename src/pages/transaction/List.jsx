@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -6,28 +7,8 @@ import AppModal from "@/components/AppModal";
 import { Label } from "@/components/ui/label";
 import api from "@/services/api.js";
 
-// const datatransactions = [
-//     {
-//         id: 1,
-//         name: "Aira",
-//         email: "airaasastrii@gmail.com",
-//         password: 12345678
-//     },
-//     {
-//         id: 2,
-//         name: "Budi",
-//         email: "budii23@gmail.com",
-//         password: 12345678
-//     },
-//     {
-//         id: 3,
-//         name: "Ani",
-//         email: "anii45@gmail.com",
-//         password: 12345678
-//     },
-
-// ]
 const ListTransaction = () => {
+    const navigate = useNavigate();
     const _initForm = {
         id: null,
         name: "",
@@ -49,7 +30,7 @@ const ListTransaction = () => {
         }
     };
     useEffect(() => {
-        fetchUser()
+        fetchTransaction()
     }, []);
 
     const handleOpenModal = () => {
@@ -126,7 +107,8 @@ const ListTransaction = () => {
                     <div>
                         <CardTitle className="text-xl font-bold">Data Transaction</CardTitle>
                     </div>
-                    <Button className="bg-pink-800" onClick={handleOpenModal}>Create New Transaction</Button>
+                    {/* <Button className="bg-pink-800" onClick={handleOpenModal}>Create New Transaction</Button> */}
+                    <Button onClick={() => navigate("/transaction/create")}>Create New Transaction</Button>
                 </CardHeader>
                 <CardContent className="p-0">
                     <div className="d-flex justify-content-between align-items-center mb-3">
@@ -161,7 +143,7 @@ const ListTransaction = () => {
                                         {/* <td>
                                             <span className= {`border p-2 rounded-lg px-6 ${user.is_active === 1? "bg-green-600" : "bg-red-600"}  text-white`}>{user.is_active === 1? "Active" : "In-Active"}
                                             </span></td> */}
-                                        <td className="px-4 py-6 text-right whitespace-nowrap">
+                                        <td className="px-4 py-6 whitespace-nowrap">
                                             <Button onClick={() => handleEditModal(user)} size="sm" className="me-2 rounded-md bg-pink-800 text-white">Edit</Button>
                                             <Button onClick={() => handleDelete(user.id)} variant="destructive" size="sm" className="me-2 rounded-md  bg-pink-500 text-white">Delete</Button>
                                         </td>

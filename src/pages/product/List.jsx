@@ -13,27 +13,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-// const ProductPage= [
-//     {
-//         id: 1,
-//         name: "Aira",
-//         email: "airaasastrii@gmail.com",
-//         password: 12345678
-//     },
-//     {
-//         id: 2,
-//         name: "Budi",
-//         email: "budii23@gmail.com",
-//         password: 12345678
-//     },
-//     {
-//         id: 3,
-//         name: "Ani",
-//         email: "anii45@gmail.com",
-//         password: 12345678
-//     },
-
-// ]
 const ProductPage = () => {
     const _initForm = {
         id: null,

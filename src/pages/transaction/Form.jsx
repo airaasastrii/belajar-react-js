@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -8,25 +9,23 @@ import api from "@/services/api.js";
 // import { SelectContent } from "@/components/ui/select";
 import {
   Select,
-  SelectContent,
-  SelectGroup,
+    SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
 
 const FormTransaction = () => {
-    const _initForm = {
-        id: null,
-        name: "",
-        email: "",
-        password: "",
-        is_active: 1,
-    };
+    const navigate = useNavigate();
+    // const _initForm = {
+    //     id: null,
+    //     name: "",
+    //     email: "",
+    //     password: "",
+    //     is_active: 1,
+    // };
 
     const [products, setProducts] = useState([]);
-    const [formData, setFormData] = useState(_initForm);
-    const [isEdit, setIsEdit] = useState(false);
     const [cart, setCart] = useState([]);
     const [paymentMethod, setPaymentMethod] = useState("cash");
     const [cashAmount, setCashAmount] = useState("");
@@ -60,7 +59,32 @@ const FormTransaction = () => {
 
     const removeItem = (id) => {
         setCart((prev) => prev.filter((item) => item.id !== id));
-    }
+    };
+
+    const updateQty = (id, qty) => {
+        setCart((prev) => {
+            return prev
+                .map((item) => {
+                    if (item.id === id) {
+                        const nextQty = item.qty + qty;
+                        return nextQty > 0 && nextQty <= item.stock
+                            ? { ...item, qty: nextQty }
+                            : item;
+                    }
+                    return item;
+                })
+                .filter((item) => item.qty > 0);
+        });
+    };
+
+    console.log("cart", cart);
+
+    // const handleChange = (e) => {
+    //     setFormData({
+    //         ...formData,
+    //         [e.target.name]: e.target.value,
+    //     });
+    // };
 
     const handleOpenModal = () => {
         setShowModal(true);
@@ -129,6 +153,50 @@ const FormTransaction = () => {
     // filter : transactions
     };
 
+    const totalAmount = cart.reduce((acc, item) => acc + item.price * item.qty, 0);
+    const TAX_RATE = 0.1
+    const tax = Math.round(totalAmount * TAX_RATE);
+    // acc = akumulasi/akumulator, 
+    const total = totalAmount + tax;
+    const change = Number(cashAmount) - totalAmount;
+
+    const handleCheckout = async () => {
+        try {
+            setLoading(true);
+            const payload = {
+                order_number: Date.now(),
+                payment_method: paymentMethod === "Cash" ? 2 : 1,
+                items: cart.map((item) => ({
+                    product_id: item.id,
+                    qty: item.qty,
+                    price: item.price,
+                })),
+                subtotal: totalAmount,
+                pay: cashAmount,
+                tax: tax,
+                total: total,
+            };
+
+            console.log(payload);
+            const response = await api.post('/transaction', payload);
+            // const resData = response.data;
+            navigate('/transaction');
+
+            if (!response.status) {
+                alert(response.message || "Failed process transaction")
+            }
+
+            if (paymentMethod === "qris" && response.payment_gateway?.redirect_url) {
+                window.location.href = response.payment_gateway.redirect_url;
+                return;
+            }
+            navigate("/transaction/print");
+        } catch (error) {
+            console.log('error transaction order', error);
+        } finally {
+            setLoading(false);
+        }
+    };
     return (
         <>
         <div className="grid grid-col-1 lg:grid-cols-12 gap-6 items-start">
@@ -164,22 +232,50 @@ const FormTransaction = () => {
                     <CardContent className="p-4 space-y-4">
 
                         <div className="space-y-3 overflow-y-auto divide-y divide-border/60">
-                        {cart.map((item, index) => (
-                            <div key ={index}>
-                            <div key={item.id}>
-                                <div className="pt-5 flex-1 items-center justify-between text-sm">
-                                    <p className="font-medium text-xs">{item.name}</p>
-                                    <p className="text-[11px] text-muted-foreground">{Number(item.price).toLocaleString('id-ID')}</p>
-                                </div>
-                            </div>
+                                {cart.map((item) => (
+                                    <div>
+                                        <div className="pt-5 flex items-center justify-center text-sm">
+                                            <div className="flex-1 pr-2">
+                                                <p className="font-medium text-xs">{item.name}</p>
+                                                <p className="text-[11px] text-muted-foreground">
+                                                    {Number(item.price).toLocaleString("id-ID", {
+                                                        style: "currency",
+                                                        currency: "IDR",
+                                                    })}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-1.5">
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                className="h-6 w-6 p-0 text-xs"
+                                                onClick={() => updateQty(item.id, -1)}
+                                            >
+                                                -
+                                            </Button>
+                                            <span className="w-6 text-center text-xs font-mono font-medium">
+                                                {item.qty}
+                                            </span>
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                className="h-6 w-6 p-0 text-xs"
+                                                onClick={() => updateQty(item.id, 1)}
+                                            >
+                                                +
+                                            </Button>
+                                            <Button
+                                                onClick={() => removeItem(item.id)}
+                                                variant="outline"
+                                                size="sm"
+                                                className="h-6 w-6 p-0 text-xs text-rose-600 hover:text-rose-400 hover:bg-red-200"
+                                            >
+                                                x
+                                            </Button>
+                                        </div>
+                                    </div>
 
-                            <div className="flex items-center gap-1.5">
-                                <Button Button onClick={() => updateQty(item.id, -1)} variant="outline" size="sm" className="h-6 w-6 p-0 text-xs mr-2">-</Button>
-                                <span className="w-6 text-center text-xs font-mono font-medium mx-2">{item.qty}</span>
-                                <Button onClick={() => updateQty(item.id, 1)} variant="outline" size="sm" className="h-6 w-6 p-0 text-xs mx-2">+</Button>
-                                <Button onClick ={() => removeItem(item.id)} variant="outline" size="sm" className="h-6 w-6 p-0 text-xs text-rose-600 hover:text-rose-700 hover:bg-rose-50">x</Button>
-                            </div>                       
-                                </div>
                         ))}
                         <div className="space-y-1">
                             <Label className="text-sm">Payment Method</Label>
@@ -201,18 +297,26 @@ const FormTransaction = () => {
                         )}
                         <div className="space-y-1.5 pt-3 border-t text-xs">
                             <div className="flex justify-between font-semibold text-sm">
+                                        <span>subTotal</span>
+                                        <span>{Number(totalAmount).toLocaleString('id-ID', { style: "currency", currency: "IDR", })}</span>
+                                    </div>
+                                    <div className="flex justify-between font-semibold text-sm">
+                                        <span>Tax (10%)</span>
+                                        <span>{Number(tax).toLocaleString('id-ID', { style: "currency", currency: "IDR", })}</span>
+                                    </div>
+                                    <div className="flex justify-between font-semibold text-sm">
                                 <span>Total</span>
-                                <span>Rp.100.000</span>
+                                        <span>{Number(total).toLocaleString('id-ID', { style: "currency", currency: "IDR", })}</span>
                             </div>
                             <div className="flex justify-between text-muted-foreground">
                                 <span>Change</span>
-                                <span>Rp.100.000</span>
+                                        <span>{Number(change).toLocaleString('id-ID', { style: "currency", currency: "IDR", })}</span>                             
                             </div>
                         </div>
                         </div>
                     </CardContent>
                     <CardFooter className="p-4 border-t">
-                        <Button className="w-full text-xs font-semibold">
+                            <Button onClick={handleCheckout} className="w-full text-xs font-semibold">
                             {loading ? "Loading..." : "Save Transaction"}
                         </Button>
                     </CardFooter>
